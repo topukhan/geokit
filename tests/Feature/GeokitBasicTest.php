@@ -10,6 +10,7 @@ use Topukhan\Geokit\Services\AddressResolverService;
 
 class GeokitBasicTest extends TestCase
 {
+    protected $provider = 'nominatim';
     protected function getPackageProviders($app)
     {
         return [GeokitServiceProvider::class];
@@ -25,7 +26,7 @@ class GeokitBasicTest extends TestCase
     protected function defineEnvironment($app)
     {
         // Set test configuration
-        $app['config']->set('geokit.default_providers', ['nominatim']); // Use only free provider for tests
+        $app['config']->set('geokit.default_providers', [$this->provider]); // Use only free provider for tests
         $app['config']->set('geokit.timeout', 10);
         $app['config']->set('geokit.max_results', 5);
     }
@@ -99,7 +100,7 @@ class GeokitBasicTest extends TestCase
         if ($response->hasResults()) {
             $first = $response->first();
             $this->assertNotNull($first);
-            $this->assertEquals('nominatim', $first->provider);
+            $this->assertEquals($this->provider, $first->provider);
             $this->assertIsFloat($first->lat);
             $this->assertIsFloat($first->lng);
             $this->assertIsString($first->formatted);

@@ -46,21 +46,22 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
         try {
             $response = Http::timeout($this->timeout)
                 ->get(self::BASE_URL, [
-                    'text' => $query,
-                    'apiKey' => $this->apiKey,
-                    'limit' => min($maxResults, 20), // Geoapify max is 20
+                    'text'   =>  $query,
+                    'apiKey' =>  $this->apiKey,
+                    'limit'  =>  min($maxResults, 20),
+                    'filter' => 'countrycode:bd',
                     'format' => 'json'
                 ]);
 
             $this->handleErrorResponse($response);
-
+            
             $data = $response->json();
             
-            if (!isset($data['features']) || !is_array($data['features'])) {
+            if (!isset($data['results']) || !is_array($data['results'])) {
                 return [];
             }
 
-            return $this->transformResults($data['features']);
+            return $this->transformResults($data['results']);
 
         } catch (\Exception $e) {
             // If it's a quota/auth error, mark as unavailable
@@ -123,30 +124,25 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
     /**
      * Transform Geoapify results to our standard format.
      */
-    private function transformResults(array $features): array
+    private function transformResults(array $responses): array
     {
         $results = [];
 
-        foreach ($features as $feature) {
-            if (!isset($feature['geometry']['coordinates']) || !isset($feature['properties'])) {
+        foreach ($responses as $response) {
+            if (!isset($response['lat']) || !isset($response['formatted'])) {
                 continue;
             }
 
-            $properties = $feature['properties'];
-            $coordinates = $feature['geometry']['coordinates'];
-
             // Geoapify returns [lng, lat] format
-            $lng = (float) $coordinates[0];
-            $lat = (float) $coordinates[1];
-
-            $formatted = $properties['formatted'] ?? '';
+            $lng = (float) $response['lon'];
+            $lat = (float) $response['lat'];
             
             // Build components array
-            $components = $this->buildComponents($properties);
+            $components = $this->buildComponents($response);
 
             $results[] = new GeocodeResult(
                 provider: $this->getName(),
-                formatted: $formatted,
+                formatted: $response['formatted'],
                 lat: $lat,
                 lng: $lng,
                 components: $components
@@ -159,16 +155,17 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
     /**
      * Build components array from Geoapify properties.
      */
-    private function buildComponents(array $properties): array
+    private function buildComponents(array $response): array
     {
         $components = [];
 
         // Map common fields
+        // provider keys => custom keys
         $fieldMap = [
-            'house_number' => 'house_number',
+            'housenumber'=> 'house_number',
             'street' => 'street',
             'city' => 'city',
-            'district' => 'district',
+            'county' => 'district',
             'state' => 'state',
             'postcode' => 'postcode',
             'country' => 'country',
@@ -176,16 +173,16 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
         ];
 
         foreach ($fieldMap as $geoapifyField => $componentField) {
-            if (isset($properties[$geoapifyField]) && !empty($properties[$geoapifyField])) {
-                $components[$componentField] = $properties[$geoapifyField];
+            if (isset($response[$geoapifyField]) && !empty($response[$geoapifyField])) {
+                $components[$componentField] = $response[$geoapifyField];
             }
         }
 
         // Add suburb/neighbourhood if available
-        if (isset($properties['suburb']) && !empty($properties['suburb'])) {
-            $components['suburb'] = $properties['suburb'];
-        } elseif (isset($properties['neighbourhood']) && !empty($properties['neighbourhood'])) {
-            $components['suburb'] = $properties['neighbourhood'];
+        if (isset($response['suburb']) && !empty($response['suburb'])) {
+            $components['suburb'] = $response['suburb'];
+        } elseif (isset($response['neighbourhood']) && !empty($response['neighbourhood'])) {
+            $components['suburb'] = $response['neighbourhood'];
         }
 
         return $components;
