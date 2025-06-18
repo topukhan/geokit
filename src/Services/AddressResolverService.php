@@ -34,8 +34,10 @@ class AddressResolverService
         $failedProviders = [];
         $usedFallback = false;
         $primaryProviderFailed = false;
+        $providerCount = count($this->providers);
 
         foreach ($this->providers as $index => $provider) {
+            
             // Skip if provider is not available
             if (! $provider->isAvailable()) {
                 $failedProviders[] = $provider->getName();
@@ -50,7 +52,7 @@ class AddressResolverService
                     $allResults = array_merge($allResults, $results);
 
                     // If this is not the first provider, we used fallback
-                    if ($index > 0 || $primaryProviderFailed) {
+                    if ($index == $providerCount - 1 || $primaryProviderFailed) {
                         $usedFallback = true;
                     }
 

@@ -10,11 +10,12 @@ return [
     | The providers will be tried in the order they are listed. If one fails,
     | the next one will be attempted.
     |
-    | Available providers: 'geoapify', 'nominatim'
+    | Available providers: 'geoapify', 'nominatim', 'locationiq'
     |
     */
     'default_providers' => [
         'geoapify',
+        'locationiq',
         'nominatim',
     ],
 
@@ -30,6 +31,7 @@ return [
     */
     'api_keys' => [
         'geoapify' => env('GEOKIT_GEOAPIFY_KEY', 'f763735f7266423ba51899a18e34efcb'),
+        'locationiq'=> env('GEOKIT_LOCATIONIQ_KEY','pk.129943496f1af64462174442090bb50a'),
     ],
 
     /*

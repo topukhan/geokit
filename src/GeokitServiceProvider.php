@@ -5,6 +5,7 @@ namespace Topukhan\Geokit;
 use Illuminate\Support\ServiceProvider;
 use Topukhan\Geokit\Services\AddressResolverService;
 use Topukhan\Geokit\Services\Geocoders\GeoapifyGeocoder;
+use Topukhan\Geokit\Services\Geocoders\LocationIQGeocoder;
 use Topukhan\Geokit\Services\Geocoders\NominatimGeocoder;
 
 class GeokitServiceProvider extends ServiceProvider
@@ -26,6 +27,13 @@ class GeokitServiceProvider extends ServiceProvider
                 $app['config']->get('geokit.timeout', 30)
             );
         });
+        
+        $this->app->singleton(LocationIQGeocoder::class, function ($app) {
+            return new LocationIQGeocoder(
+                $app['config']->get('geokit.api_keys.locationiq'),
+                $app['config']->get('geokit.timeout', 30)
+            );
+        });
 
         $this->app->singleton(NominatimGeocoder::class, function ($app) {
             return new NominatimGeocoder(
@@ -41,6 +49,7 @@ class GeokitServiceProvider extends ServiceProvider
             foreach ($providerNames as $providerName) {
                 $providers[] = match ($providerName) {
                     'geoapify' => $app->make(GeoapifyGeocoder::class),
+                    'locationiq' => $app->make(LocationIQGeocoder::class),
                     'nominatim' => $app->make(NominatimGeocoder::class),
                     default => null,
                 };
@@ -73,6 +82,7 @@ class GeokitServiceProvider extends ServiceProvider
         return [
             AddressResolverService::class,
             GeoapifyGeocoder::class,
+            LocationIQGeocoder::class,
             NominatimGeocoder::class,
             'geokit',
         ];
