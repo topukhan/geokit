@@ -4,12 +4,11 @@ namespace Topukhan\Geokit\Services;
 
 use Topukhan\Geokit\Contracts\GeocodingDriverInterface;
 use Topukhan\Geokit\Data\GeocodeResponse;
-use Topukhan\Geokit\Data\GeocodeResult;
 
 class AddressResolverService
 {
     /**
-     * @param GeocodingDriverInterface[] $providers
+     * @param  GeocodingDriverInterface[]  $providers
      */
     public function __construct(
         private array $providers
@@ -21,7 +20,7 @@ class AddressResolverService
     public function search(string $query, int $maxResults = 10): GeocodeResponse
     {
         $query = trim($query);
-        
+
         if (empty($query)) {
             return new GeocodeResponse(
                 query: $query,
@@ -38,35 +37,36 @@ class AddressResolverService
 
         foreach ($this->providers as $index => $provider) {
             // Skip if provider is not available
-            if (!$provider->isAvailable()) {
+            if (! $provider->isAvailable()) {
                 $failedProviders[] = $provider->getName();
+
                 continue;
             }
 
             try {
                 $results = $provider->search($query, $maxResults);
-                
-                if (!empty($results)) {
+
+                if (! empty($results)) {
                     $allResults = array_merge($allResults, $results);
-                    
+
                     // If this is not the first provider, we used fallback
                     if ($index > 0 || $primaryProviderFailed) {
                         $usedFallback = true;
                     }
-                    
+
                     // Continue to get results from all providers
                 }
-                
+
             } catch (\Exception $e) {
                 // Mark provider as unavailable and add to failed list
                 $provider->markUnavailable();
                 $failedProviders[] = $provider->getName();
-                
+
                 // If this was the first provider, mark that primary failed
                 if ($index === 0) {
                     $primaryProviderFailed = true;
                 }
-                
+
                 // Continue to next provider
                 continue;
             }
@@ -113,7 +113,7 @@ class AddressResolverService
                 }
             }
 
-            if (!$isDuplicate) {
+            if (! $isDuplicate) {
                 $unique[] = $result;
             }
         }
@@ -126,7 +126,7 @@ class AddressResolverService
      */
     public function getAvailableProviders(): array
     {
-        return array_filter($this->providers, fn($provider) => $provider->isAvailable());
+        return array_filter($this->providers, fn ($provider) => $provider->isAvailable());
     }
 
     /**

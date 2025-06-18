@@ -10,6 +10,7 @@ use Topukhan\Geokit\Data\GeocodeResult;
 class NominatimGeocoder implements GeocodingDriverInterface
 {
     private bool $isAvailable = true;
+
     private const BASE_URL = 'https://nominatim.openstreetmap.org/search';
 
     public function __construct(
@@ -34,7 +35,7 @@ class NominatimGeocoder implements GeocodingDriverInterface
 
     public function search(string $query, int $maxResults = 10): array
     {
-        if (!$this->isAvailable()) {
+        if (! $this->isAvailable()) {
             throw new \Exception('Nominatim provider is not available');
         }
 
@@ -55,8 +56,8 @@ class NominatimGeocoder implements GeocodingDriverInterface
             $this->handleErrorResponse($response);
 
             $data = $response->json();
-            
-            if (!is_array($data)) {
+
+            if (! is_array($data)) {
                 return [];
             }
 
@@ -67,7 +68,7 @@ class NominatimGeocoder implements GeocodingDriverInterface
             if ($this->isRateLimitError($e)) {
                 $this->markUnavailable();
             }
-            
+
             throw $e;
         }
     }
@@ -87,7 +88,7 @@ class NominatimGeocoder implements GeocodingDriverInterface
         // Check for rate limiting (HTTP 429)
         if ($statusCode === 429) {
             $this->markUnavailable();
-            throw new \Exception("Nominatim API rate limit exceeded");
+            throw new \Exception('Nominatim API rate limit exceeded');
         }
 
         // Check for blocked/forbidden
@@ -105,7 +106,7 @@ class NominatimGeocoder implements GeocodingDriverInterface
     private function isRateLimitError(\Exception $e): bool
     {
         $message = strtolower($e->getMessage());
-        
+
         return str_contains($message, 'rate limit') ||
                str_contains($message, 'blocked') ||
                str_contains($message, '429') ||
@@ -120,7 +121,7 @@ class NominatimGeocoder implements GeocodingDriverInterface
         $results = [];
 
         foreach ($data as $item) {
-            if (!isset($item['lat']) || !isset($item['lon'])) {
+            if (! isset($item['lat']) || ! isset($item['lon'])) {
                 continue;
             }
 
@@ -128,7 +129,7 @@ class NominatimGeocoder implements GeocodingDriverInterface
             $lng = (float) $item['lon'];
 
             $formatted = $item['display_name'] ?? '';
-            
+
             // Build components array from address details
             $components = $this->buildComponents($item['address'] ?? []);
 
@@ -173,17 +174,17 @@ class NominatimGeocoder implements GeocodingDriverInterface
         ];
 
         foreach ($fieldMap as $nominatimField => $componentField) {
-            if (isset($address[$nominatimField]) && !empty($address[$nominatimField])) {
+            if (isset($address[$nominatimField]) && ! empty($address[$nominatimField])) {
                 $components[$componentField] = $address[$nominatimField];
             }
         }
 
         // Add suburb/neighbourhood if available
-        if (isset($address['suburb']) && !empty($address['suburb'])) {
+        if (isset($address['suburb']) && ! empty($address['suburb'])) {
             $components['suburb'] = $address['suburb'];
-        } elseif (isset($address['neighbourhood']) && !empty($address['neighbourhood'])) {
+        } elseif (isset($address['neighbourhood']) && ! empty($address['neighbourhood'])) {
             $components['suburb'] = $address['neighbourhood'];
-        } elseif (isset($address['quarter']) && !empty($address['quarter'])) {
+        } elseif (isset($address['quarter']) && ! empty($address['quarter'])) {
             $components['suburb'] = $address['quarter'];
         }
 

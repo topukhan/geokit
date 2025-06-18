@@ -7,7 +7,7 @@ use Topukhan\Geokit\Data\GeocodeResponse;
 
 /**
  * @method static GeocodeResponse search(string $query)
- * 
+ *
  * @see \Topukhan\Geokit\Services\AddressResolverService
  */
 class Geokit extends Facade

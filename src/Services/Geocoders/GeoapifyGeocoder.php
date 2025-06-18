@@ -10,6 +10,7 @@ use Topukhan\Geokit\Data\GeocodeResult;
 class GeoapifyGeocoder implements GeocodingDriverInterface
 {
     private bool $isAvailable = true;
+
     private const BASE_URL = 'https://api.geoapify.com/v1/geocode/search';
 
     public function __construct(
@@ -29,7 +30,7 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
 
     public function isAvailable(): bool
     {
-        return $this->isAvailable && !empty($this->apiKey);
+        return $this->isAvailable && ! empty($this->apiKey);
     }
 
     public function markUnavailable(): void
@@ -39,25 +40,25 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
 
     public function search(string $query, int $maxResults = 10): array
     {
-        if (!$this->isAvailable()) {
+        if (! $this->isAvailable()) {
             throw new \Exception('Geoapify provider is not available');
         }
 
         try {
             $response = Http::timeout($this->timeout)
                 ->get(self::BASE_URL, [
-                    'text'   =>  $query,
-                    'apiKey' =>  $this->apiKey,
-                    'limit'  =>  min($maxResults, 20),
+                    'text' => $query,
+                    'apiKey' => $this->apiKey,
+                    'limit' => min($maxResults, 20),
                     'filter' => 'countrycode:bd',
-                    'format' => 'json'
+                    'format' => 'json',
                 ]);
 
             $this->handleErrorResponse($response);
-            
+
             $data = $response->json();
-            
-            if (!isset($data['results']) || !is_array($data['results'])) {
+
+            if (! isset($data['results']) || ! is_array($data['results'])) {
                 return [];
             }
 
@@ -68,7 +69,7 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
             if ($this->isQuotaOrAuthError($e)) {
                 $this->markUnavailable();
             }
-            
+
             throw $e;
         }
     }
@@ -94,12 +95,12 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
         // Check response body for specific error messages
         if (stripos($body, 'quota') !== false || stripos($body, 'limit') !== false) {
             $this->markUnavailable();
-            throw new \Exception("Geoapify API quota exceeded");
+            throw new \Exception('Geoapify API quota exceeded');
         }
 
         if (stripos($body, 'invalid') !== false && stripos($body, 'key') !== false) {
             $this->markUnavailable();
-            throw new \Exception("Geoapify API key is invalid");
+            throw new \Exception('Geoapify API key is invalid');
         }
 
         throw new \Exception("Geoapify API error (HTTP {$statusCode}): {$body}");
@@ -111,7 +112,7 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
     private function isQuotaOrAuthError(\Exception $e): bool
     {
         $message = strtolower($e->getMessage());
-        
+
         return str_contains($message, 'quota') ||
                str_contains($message, 'limit') ||
                str_contains($message, 'invalid') ||
@@ -129,14 +130,14 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
         $results = [];
 
         foreach ($responses as $response) {
-            if (!isset($response['lat']) || !isset($response['formatted'])) {
+            if (! isset($response['lat']) || ! isset($response['formatted'])) {
                 continue;
             }
 
             // Geoapify returns [lng, lat] format
             $lng = (float) $response['lon'];
             $lat = (float) $response['lat'];
-            
+
             // Build components array
             $components = $this->buildComponents($response);
 
@@ -162,7 +163,7 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
         // Map common fields
         // provider keys => custom keys
         $fieldMap = [
-            'housenumber'=> 'house_number',
+            'housenumber' => 'house_number',
             'street' => 'street',
             'city' => 'city',
             'county' => 'district',
@@ -173,15 +174,15 @@ class GeoapifyGeocoder implements GeocodingDriverInterface
         ];
 
         foreach ($fieldMap as $geoapifyField => $componentField) {
-            if (isset($response[$geoapifyField]) && !empty($response[$geoapifyField])) {
+            if (isset($response[$geoapifyField]) && ! empty($response[$geoapifyField])) {
                 $components[$componentField] = $response[$geoapifyField];
             }
         }
 
         // Add suburb/neighbourhood if available
-        if (isset($response['suburb']) && !empty($response['suburb'])) {
+        if (isset($response['suburb']) && ! empty($response['suburb'])) {
             $components['suburb'] = $response['suburb'];
-        } elseif (isset($response['neighbourhood']) && !empty($response['neighbourhood'])) {
+        } elseif (isset($response['neighbourhood']) && ! empty($response['neighbourhood'])) {
             $components['suburb'] = $response['neighbourhood'];
         }
 

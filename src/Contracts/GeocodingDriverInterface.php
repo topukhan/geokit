@@ -19,9 +19,10 @@ interface GeocodingDriverInterface
     /**
      * Search for addresses matching the given query.
      *
-     * @param string $query The search query
-     * @param int $maxResults Maximum number of results to return
+     * @param  string  $query  The search query
+     * @param  int  $maxResults  Maximum number of results to return
      * @return GeocodeResult[] Array of geocode results
+     *
      * @throws \Exception When the provider fails and should be skipped
      */
     public function search(string $query, int $maxResults = 10): array;

@@ -15,7 +15,7 @@ class GeokitServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/geokit.php',
+            __DIR__.'/../config/geokit.php',
             'geokit'
         );
 
@@ -60,7 +60,7 @@ class GeokitServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/geokit.php' => config_path('geokit.php'),
+                __DIR__.'/../config/geokit.php' => config_path('geokit.php'),
             ], 'geokit-config');
         }
     }

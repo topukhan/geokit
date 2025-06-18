@@ -5,10 +5,10 @@ namespace Topukhan\Geokit\Data;
 class GeocodeResponse
 {
     /**
-     * @param string $query The original search query
-     * @param GeocodeResult[] $results Array of geocode results
-     * @param bool $usedFallback Whether fallback providers were used
-     * @param array $failedProviders List of providers that failed
+     * @param  string  $query  The original search query
+     * @param  GeocodeResult[]  $results  Array of geocode results
+     * @param  bool  $usedFallback  Whether fallback providers were used
+     * @param  array  $failedProviders  List of providers that failed
      */
     public function __construct(
         public readonly string $query,
@@ -22,7 +22,7 @@ class GeocodeResponse
      */
     public function hasResults(): bool
     {
-        return !empty($this->results);
+        return ! empty($this->results);
     }
 
     /**
@@ -48,7 +48,7 @@ class GeocodeResponse
     {
         return [
             'query' => $this->query,
-            'results' => array_map(fn(GeocodeResult $result) => $result->toArray(), $this->results),
+            'results' => array_map(fn (GeocodeResult $result) => $result->toArray(), $this->results),
             'usedFallback' => $this->usedFallback,
             'failedProviders' => $this->failedProviders,
         ];

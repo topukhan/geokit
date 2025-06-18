@@ -11,6 +11,7 @@ use Topukhan\Geokit\Services\AddressResolverService;
 class GeokitBasicTest extends TestCase
 {
     protected $provider = 'nominatim';
+
     protected function getPackageProviders($app)
     {
         return [GeokitServiceProvider::class];
@@ -35,7 +36,7 @@ class GeokitBasicTest extends TestCase
     public function it_can_resolve_service_from_container()
     {
         $service = $this->app->make(AddressResolverService::class);
-        
+
         $this->assertInstanceOf(AddressResolverService::class, $service);
     }
 
@@ -44,7 +45,7 @@ class GeokitBasicTest extends TestCase
     {
         // This will use Nominatim (free provider)
         $response = Geokit::search('London, UK');
-        
+
         $this->assertInstanceOf(GeocodeResponse::class, $response);
         $this->assertEquals('London, UK', $response->query);
         $this->assertTrue(is_array($response->results));
@@ -54,7 +55,7 @@ class GeokitBasicTest extends TestCase
     public function it_returns_empty_results_for_empty_query()
     {
         $response = Geokit::search('');
-        
+
         $this->assertInstanceOf(GeocodeResponse::class, $response);
         $this->assertEquals('', $response->query);
         $this->assertEmpty($response->results);
@@ -65,7 +66,7 @@ class GeokitBasicTest extends TestCase
     public function it_handles_whitespace_query()
     {
         $response = Geokit::search('   ');
-        
+
         $this->assertInstanceOf(GeocodeResponse::class, $response);
         $this->assertEquals('', $response->query);
         $this->assertEmpty($response->results);
@@ -75,15 +76,15 @@ class GeokitBasicTest extends TestCase
     public function response_has_correct_structure()
     {
         $response = Geokit::search('Paris, France');
-        
+
         $this->assertInstanceOf(GeocodeResponse::class, $response);
-        
+
         // Test response methods
         $this->assertIsBool($response->hasResults());
         $this->assertIsInt($response->count());
         $this->assertIsArray($response->toArray());
         $this->assertIsString($response->toJson());
-        
+
         // Test array structure
         $array = $response->toArray();
         $this->assertArrayHasKey('query', $array);
@@ -96,7 +97,7 @@ class GeokitBasicTest extends TestCase
     public function it_can_get_first_result()
     {
         $response = Geokit::search('Tokyo, Japan');
-        
+
         if ($response->hasResults()) {
             $first = $response->first();
             $this->assertNotNull($first);
